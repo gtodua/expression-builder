@@ -1,0 +1,170 @@
+﻿@page "/expression"
+
+<PageTitle>ExpressionBuilder</PageTitle>
+
+<MudGrid>
+    <MudItem xs="3">
+        <MudPaper Width="200px">
+            <MudList Clickable="true" Style="height: 300px; overflow-y: scroll;">
+                @foreach(var sourceFieldItem in sourceFields)
+                {
+                    <MudListItem 
+                        Text="@sourceFieldItem.Name" 
+                        @ondblclick="() => AddItem(sourceFieldItem.Id, sourceFieldItem.Name, false, sourceFieldItem.Value)">
+                    </MudListItem>
+                }
+            </MudList>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="9">
+        <MudPaper Height="300px" Outlined="true" Class="@DragClass">
+            @foreach(var fieldVal in sourceFieldValues)
+            {
+                @if(@fieldVal.isCustomText)
+                {
+                    <MudChip 
+                        Label="true" 
+                        Color="Color.Default" 
+                        Size="Size.Large" 
+                        @ondblclick="() => RemoveItem(fieldVal.Id)"
+                    >
+                        @fieldVal.sourceFieldValueName
+                    </MudChip>    
+                }
+                else
+                {
+                    <MudChip 
+                        Label="true" 
+                        Color="Color.Warning" 
+                        Size="Size.Large" 
+                        @ondblclick="() => RemoveItem(fieldVal.Id)"
+                    >
+                        @fieldVal.sourceFieldValueName
+                    </MudChip>    
+                }
+            }
+            <MudButton Variant="Variant.Filled" Class="ml-2">
+                <MudTextField 
+                    @bind-Value="customText" 
+                    Label="Add custom text" 
+                    Variant="Variant.Outlined" 
+                    Margin="Margin.Dense" 
+                    OnKeyUp="AddCustomText"
+                    Clearable="true"
+                />
+            </MudButton>
+        </MudPaper>
+        <MudPaper Class="pa-2">
+            <MudText>
+                Preview: @previewText 
+            </MudText>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+
+@code {
+    private bool Clearing = false;
+    private static string DefaultDragClass = "relative rounded-lg border-2 border-dashed pa-4 mud-width-full mud-height-full";
+    private string DragClass = DefaultDragClass;
+
+    public string customText { get; set; } 
+    public EventCallback<string> ValueChanged { get; set; }
+
+    public string previewText { get; set; }
+
+    private int sourceFieldValueId = 0;
+
+    private class sourceField
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Value { get; set; }
+    }
+    private ICollection<sourceField> sourceFields = new List<sourceField>();
+
+    //Source Field Values for Preview
+    private class sourceFieldValue
+    {
+        public int Id { get; set; }
+        public int sourceFieldValueId { get; set; }
+        public string sourceFieldValueName { get; set; }
+        public bool isCustomText { get; set; }
+        public string sourceFieldVal { get; set; }
+    }
+    private ICollection<sourceFieldValue> sourceFieldValues = new List<sourceFieldValue>();
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        sourceFields.Add(new sourceField { Id = 1, Name = "Student Id", Value = "123456" });
+        sourceFields.Add(new sourceField { Id = 2, Name = "Student Email", Value = "jdow@test.com" });
+        sourceFields.Add(new sourceField { Id = 3, Name = "Course Id", Value = "1301" });
+        sourceFields.Add(new sourceField { Id = 4, Name = "Section Id", Value = "10" });
+        sourceFields.Add(new sourceField { Id = 5, Name = "School ID", Value = "1" });
+        sourceFields.Add(new sourceField { Id = 6, Name = "Course Title", Value = "English I" });
+        sourceFields.Add(new sourceField { Id = 7, Name = "Period", Value = "2" });
+        sourceFields.Add(new sourceField { Id = 8, Name = "Semester Code", Value = "1" });
+        sourceFields.Add(new sourceField { Id = 9, Name = "Room", Value = "1002" });
+        sourceFields.Add(new sourceField { Id = 10, Name = "Teacher Email", Value = "dtrevor@test.com" });
+        sourceFields.Add(new sourceField { Id = 11, Name = "Teacher Id", Value = "231344" });
+    }
+
+    private void AddItem(int sourceFieldId, string sourceFieldName, bool isCustomText, string value)
+    {
+        sourceFieldValueId++;
+        sourceFieldValues.Add
+        (
+            new sourceFieldValue 
+            { 
+                Id = sourceFieldValueId, 
+                sourceFieldValueId = sourceFieldId, 
+                sourceFieldValueName = sourceFieldName, 
+                isCustomText = isCustomText,
+                sourceFieldVal = value
+            }
+        );
+        makePreviewText();
+    }
+
+    protected void AddCustomText(KeyboardEventArgs e)
+    {
+        if(e.Key == "Enter")
+        {
+            if (!string.IsNullOrWhiteSpace(customText))
+            {
+                this.AddItem(0, customText, true, customText);
+                customText = null;
+                StateHasChanged(); 
+            }
+        }
+    }
+
+    private void makePreviewText()
+    {
+        previewText = "";
+        sourceFieldValue element; 
+        for (int i = 0; i < sourceFieldValues.Count; i++)
+        {
+            element = sourceFieldValues.ElementAt(i);
+            if (i > 0)
+                previewText += " - ";
+            previewText += element.sourceFieldVal;
+        }
+    }
+
+    private void RemoveItem(int Id)
+    {
+        sourceFieldValue element; 
+        for (int i = 0; i < sourceFieldValues.Count; i++)
+        {
+            element = sourceFieldValues.ElementAt(i);
+            if (element.Id == Id)
+            {
+                sourceFieldValues.Remove(element);
+                break;
+            }
+        }
+        makePreviewText();
+    }
+}
